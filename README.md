@@ -1,10 +1,11 @@
-# CPanel script to for LetsEncrypt SSL
+# Automated LetsEncrypt SSL certificates for CPanel
 
 This script automates the process of installing and renewing Let's Encrypt certificates on a CPanel shared host.
 
 ## Description
 
 First of all, Yes!, you can have a free SSL certificate installed on your CPanel hosted shared server!
+
 The process was tedious, but now is one cron job away, for unlimited certification freedom.
 
 It fetches and installs the certificates for the configured domains(s) or subdomain(s).
@@ -37,3 +38,6 @@ Requirements
 Because I'm a cheap bastard just like you!
 
 > **lescript**: is standalone part of [LEManager](https://github.com/analogic/lemanager)
+
+## License
+CPaneLeScript is released under the MIT Licence. See the bundled LICENSE file for details.
