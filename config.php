@@ -6,7 +6,10 @@ class Logger {
         $str = $arguments[0];
         for ($i = 1; $i < sizeof($arguments); $i++)
             $str .= '\n' . $arguments[$i];
-        echo date('Y-m-d H:i:s')." [$name] ${str}\n";
+        if (php_sapi_name() == 'cli')
+            echo date('Y-m-d H:i:s')." [$name] ${str}\n";
+        else
+            echo date('Y-m-d H:i:s')." [$name] ${str}<br/>";
     }
 }
 
