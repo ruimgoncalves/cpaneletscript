@@ -1,4 +1,4 @@
-# Automated LetsEncrypt SSL certificates for CPanel
+# Automated LetsEncrypt SSL certificates for CPanel users
 
 This script automates the process of installing and renewing Let's Encrypt certificates on a CPanel shared host.
 
