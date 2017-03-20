@@ -4,26 +4,37 @@ if(!defined("PHP_VERSION_ID") || PHP_VERSION_ID < 50400 || !extension_loaded('op
     die("You need at least PHP 5.4.0 with OpenSSL and curl extension\n");
 }
 
-function findArrObj($arr, $value, $col='id'){
-    foreach ($arr as $el) {
-        if ($el->{$col} == $value)
-            return $el;
-    }
-    return NULL;
-}
-
-function daysToDate($endDate){
-    $certEndDate = (new DateTime())->setTimestamp($endDate);
-    $today = new DateTime("now");
-    return $certEndDate->diff($today)->format("%a");
-}
-
-function aDef($arr, $key, $default = NULL){
-    return isset($arr[$key]) ? $arr[$key] : $default;
-}
-
 require 'Lescript.php';
 require 'cpanel.php';
+require 'utils.php';
+
+
+function requestCertificate($domain, $domainData, $config, $cpanel, $logger){
+    $le = new Analogic\ACME\Lescript($config['storagePath'], $domainData['publicPath'], $logger);
+    # or without logger:
+    #$le = new Analogic\ACME\Lescript($config['storagePath'], $path);
+
+    $le->countryCode =  $domainData['certInfo']['countryCode'];
+    $le->state =        $domainData['certInfo']['state'];
+    $le->contact =      $domainData['certInfo']['contact']; // optional
+
+    $le->initAccount();
+    $le->signDomains(array_merge([$domain], (array)aDef($domainData, 'and')));
+
+    $certContent = file_get_contents($config['storagePath'] . '/' . $domain . '/cert.pem');
+    $privateKey =  file_get_contents($config['storagePath'] . '/' . $domain . '/private.pem');
+    $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $certContent] );
+
+    $logger->info("Installing cert for domain {$domain}");
+    $certInstall = $cpanel->query('SSL', 'install_ssl', [
+        'domain'    => $certData->data->domain,
+        'cert'      => $certData->data->crt,
+        'key'       => $privateKey, //$certData->data->key,
+        'cabundle'  => $certData->data->cab,
+    ] );
+    $logger->info($certInstall->data->statusmsg);
+    return TRUE;
+}
 
 if (php_sapi_name() == 'cli'){
     $opts = getopt('',['config:']);
@@ -64,50 +75,31 @@ try {
         $logger->error("Cannot connect to Cpanel, check connection and configuration.");
         return;
     }
-    $certsData = $serverResp->data;
+    $certsArr = $serverResp->data;
 
     foreach ($config['domains'] as $domain => $domainData) {
         $logger->info("Checking {$domain}");
-        $installedCert = findArrObj($certsData, $domain, 'servername');
+        $installedCert = findInArrOfObj($certsArr, $domain, 'domains', function($a,$b){
+            return in_array($b,$a);
+        });
         if (isset($installedCert)){
-            $logger->info("Found already installed cert for {$installedCert->servername}");
             $certEndDate = $installedCert->certificate->not_after;
             $daysLeft = daysToDate($certEndDate);
             $certEndDateFormated = (new DateTime())->setTimestamp($certEndDate)->format('d/m/y');
             if ($daysLeft > $config['minDays']){
-                $logger->info("Expires {$certEndDateFormated} you have {$daysLeft} days left");
+                $logger->info(" {$installedCert->servername} expires {$certEndDateFormated} you have {$daysLeft} days left");
+                $logger->info("===========================================================");
                 continue;
             } else {
-                $logger->info("Expired needs to be updated!!!!!!!!");
+                $logger->info("  Expired needs to be updated!!!!!!!!");
             }
 
         } else {
-            $logger->info("There are no certificates for this domain requesting!");
+            $logger->info("  There are no certificates for this domain requesting!");
         }
 
-        $le = new Analogic\ACME\Lescript($config['storagePath'], $domainData['publicPath'], $logger);
-        # or without logger:
-        #$le = new Analogic\ACME\Lescript($config['storagePath'], $path);
-
-        $le->countryCode =  $domainData['certInfo']['countryCode'];
-        $le->state =        $domainData['certInfo']['state'];
-        $le->contact =      $domainData['certInfo']['contact']; // optional
-
-        $le->initAccount();
-        $le->signDomains(array_merge([$domain], (array)aDef($domainData, 'and')));
-
-        $certContent = file_get_contents($config['storagePath'] . '/' . $domain . '/cert.pem');
-        $privateKey =  file_get_contents($config['storagePath'] . '/' . $domain . '/private.pem');
-        $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $certContent] );
-
-        $logger->info("Installing cert for domain {$domain}");
-        $certInstall = $cpanel->query('SSL', 'install_ssl', [
-            'domain'    => $certData->data->domain,
-            'cert'      => $certData->data->crt,
-            'key'       => $privateKey, //$certData->data->key,
-            'cabundle'  => $certData->data->cab,
-        ] );
-        $logger->info($certInstall->data->statusmsg);
+        requestCertificate($domain, $domainData, $config, $cpanel, $logger);
+        $logger->info("===========================================================");
     }
 
 } catch (\Exception $e) {
