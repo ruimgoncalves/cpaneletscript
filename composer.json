@@ -1,0 +1,14 @@
+{
+    "name": "ruimgoncalves/cpaneletscript",
+    "description": "Automated LetsEncrypt SSL certificates for CPanel users",
+    "type": "project",
+    "require": {
+        "yourivw/leclient": "^1.1"
+    },
+    "authors": [
+        {
+            "name": "Rui",
+            "email": "ruimgoncalves@gmail.com"
+        }
+    ]
+}

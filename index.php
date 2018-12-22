@@ -4,10 +4,13 @@ if(!defined("PHP_VERSION_ID") || PHP_VERSION_ID < 50400 || !extension_loaded('op
     die("You need at least PHP 5.4.0 with OpenSSL and curl extension\n");
 }
 
-require 'Lescript.php';
-require 'cpanel.php';
-require 'utils.php';
+include __DIR__.'/vendor/autoload.php';
+require __DIR__.'lib/cpanel.php';
+require __DIR__.'lib/utils.php';
 
+// Importing the classes.
+use LEClient\LEClient;
+use LEClient\LEOrder;
 
 function requestCertificate($domain, $domainData, $config, $cpanel, $logger){
     $le = new Analogic\ACME\Lescript($config['storagePath'], $domainData['publicPath'], $logger);

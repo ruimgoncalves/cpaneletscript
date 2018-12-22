@@ -1,0 +1,48 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "94a6e950ee55b88fa55d9c222db4db5d",
+    "packages": [
+        {
+            "name": "yourivw/leclient",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yourivw/LEClient.git",
+                "reference": "a9ce9f2c133a379d4a7137d80ed5881e50a7bdf8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yourivw/LEClient/zipball/a9ce9f2c133a379d4a7137d80ed5881e50a7bdf8",
+                "reference": "a9ce9f2c133a379d4a7137d80ed5881e50a7bdf8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "LEClient\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP LetsEncrypt client library for ACME v2",
+            "time": "2018-09-24T10:53:41+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
