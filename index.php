@@ -4,40 +4,16 @@ if(!defined("PHP_VERSION_ID") || PHP_VERSION_ID < 50400 || !extension_loaded('op
     die("You need at least PHP 5.4.0 with OpenSSL and curl extension\n");
 }
 
-include __DIR__.'/vendor/autoload.php';
-require __DIR__.'lib/cpanel.php';
-require __DIR__.'lib/utils.php';
+ini_set('max_execution_time', 120);
 
-// Importing the classes.
-use LEClient\LEClient;
-use LEClient\LEOrder;
+require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/lib/utils.php';
+require __DIR__.'/lib/cpanel.php';
+require __DIR__.'/lib/requester.php';
 
-function requestCertificate($domain, $domainData, $config, $cpanel, $logger){
-    $le = new Analogic\ACME\Lescript($config['storagePath'], $domainData['publicPath'], $logger);
-    # or without logger:
-    #$le = new Analogic\ACME\Lescript($config['storagePath'], $path);
+// Always use UTC
+date_default_timezone_set("UTC");
 
-    $le->countryCode =  $domainData['certInfo']['countryCode'];
-    $le->state =        $domainData['certInfo']['state'];
-    $le->contact =      $domainData['certInfo']['contact']; // optional
-
-    $le->initAccount();
-    $le->signDomains(array_merge([$domain], (array)aDef($domainData, 'and')));
-
-    $certContent = file_get_contents($config['storagePath'] . '/' . $domain . '/cert.pem');
-    $privateKey =  file_get_contents($config['storagePath'] . '/' . $domain . '/private.pem');
-    $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $certContent] );
-
-    $logger->info("Installing cert for domain {$domain}");
-    $certInstall = $cpanel->query('SSL', 'install_ssl', [
-        'domain'    => $certData->data->domain,
-        'cert'      => $certData->data->crt,
-        'key'       => $privateKey, //$certData->data->key,
-        'cabundle'  => $certData->data->cab,
-    ] );
-    $logger->info($certInstall->data->statusmsg);
-    return TRUE;
-}
 
 if (php_sapi_name() == 'cli'){
     $opts = getopt('',['config:']);
@@ -55,13 +31,8 @@ else{
     $config = require("config.{$cname}.php");
 }
 
-$logger = aDef($config, 'logger');
-
-// Always use UTC
-date_default_timezone_set("UTC");
-
-if (strlen($config['cpanel']['username']) == 0){
-    $logger->error("Please edit the default configuration file or specify an alternative configuration.");
+if (strlen($config['cpanel']['username']) == 0) {
+    mlog( "Please edit the default configuration file or specify an alternative configuration.");
     return;
 }
 
@@ -75,37 +46,55 @@ try {
 
     $serverResp = $cpanel->query('SSL', 'installed_hosts', [] );
     if (!isset($serverResp)){
-        $logger->error("Cannot connect to Cpanel, check connection and configuration.");
+        mlog( "Cannot connect to Cpanel, check connection and configuration.");
         return;
     }
     $certsArr = $serverResp->data;
 
-    foreach ($config['domains'] as $domain => $domainData) {
-        $logger->info("Checking {$domain}");
-        $installedCert = findInArrOfObj($certsArr, $domain, 'domains', function($a,$b){
+    foreach ($config['accounts'] as $email => $domainData) {
+        mlog( "Checking {$email}");
+
+        /*
+        $installedCert = findInArrOfObj($certsArr, $email, 'domains', function($a,$b){
             return in_array($b,$a);
         });
-        if (isset($installedCert)){
+
+        if (isset($installedCert)) {
             $certEndDate = $installedCert->certificate->not_after;
             $daysLeft = daysToDate($certEndDate);
             $certEndDateFormated = (new DateTime())->setTimestamp($certEndDate)->format('d/m/y');
             if ($daysLeft > $config['minDays']){
-                $logger->info(" {$installedCert->servername} expires {$certEndDateFormated} you have {$daysLeft} days left");
-                $logger->info("===========================================================");
+                mlog( " {$installedCert->servername} expires {$certEndDateFormated} you have {$daysLeft} days left");
+                mlog( "===========================================================");
                 continue;
             } else {
-                $logger->info("  Expired needs to be updated!!!!!!!!");
+                mlog( "  Expired needs to be updated!!!!!!!!");
             }
 
         } else {
-            $logger->info("  There are no certificates for this domain requesting!");
+            mlog("  There are no certificates for this domain requesting!");
         }
+        */
+        $certificate = requestCertificate($email, $domainData, $config['testing']);
+        if (!is_null($certificate)) {
+            $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $certificate] );
 
-        requestCertificate($domain, $domainData, $config, $cpanel, $logger);
-        $logger->info("===========================================================");
+            mlog("Installing cert");
+            $certInstall = $cpanel->query('SSL', 'install_ssl', [
+                'domain'    => $certData->data->domain,
+                'cert'      => $certData->data->crt,
+                'key'       => $certData->data->key,
+                'cabundle'  => $certData->data->cab,
+            ] );
+            mlog($certInstall->data->statusmsg);
+        } else {
+            mlog("!!!!!Could get certificate!!!!!");
+        }
+        mlog( "===========================================================");
     }
 
 } catch (\Exception $e) {
-    $logger->error($e->getMessage(), $e->getTraceAsString());
+    mlog( "--== Exception ==--");
+    mlog($e->getMessage());
+    mlog($e->getTraceAsString());
 }
-
