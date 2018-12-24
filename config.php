@@ -1,13 +1,6 @@
 <?php
 
-$certInfo = [
-    'countryCode' => 'PT',
-    'state' => 'Lisbon',
-    'contact' => ['mailto:my@email.com'] // optional
-];
-
 return [
-    'logger' => new Logger(),
     'testing' => false,
     'minDays' => 15, // Minimum days to wait before requesting new certificates
     'cpanel' => [
@@ -16,10 +9,9 @@ return [
         'password' => ''
     ],
     'accounts' => [
-        'info@example.org' => [
-            'certInfo' => $certInfo,
+        'info@mydomain.org' => [
+            'publicPath' => '../public_html', // related to the script location, no trailing /
             'domains' => ['mydomain.com', 'www.mydomain.com'],
-            'publicPath' => '../public_html', // related to the script location
         ]
     ]
 ];
