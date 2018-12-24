@@ -1,5 +1,24 @@
 <?php
 
+function mlog($data, $function = '')
+{
+    $e = new Exception();
+    $trace = $e->getTrace();
+    $function = $function == '' ? 'function ' .  $trace[3]['function'] . ' (function ' . $trace[2]['function'] . ')' : $function;
+    if (PHP_SAPI == "cli")
+    {
+        echo '[' . date('d-m-Y H:i:s') . '] ' . $function . ":\n";
+        print_r($data);
+        echo "\n\n";
+    }
+    else
+    {
+        echo '<b>' . date('d-m-Y H:i:s') . ', ' . $function . ':</b><br>';
+        print_r($data);
+        echo '<br><br>';
+    }
+}
+
 function findInArrOfObj($arr, $value, $col='id', $comparer){
     if (!isset($comparer))
     $comparer = function($a, $b){
