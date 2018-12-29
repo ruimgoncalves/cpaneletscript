@@ -54,41 +54,22 @@ try {
     foreach ($config['accounts'] as $email => $domainData) {
         mlog( "Checking {$email}");
 
-        /*
-        $installedCert = findInArrOfObj($certsArr, $email, 'domains', function($a,$b){
-            return in_array($b,$a);
-        });
+        $cert = requestCertificate($email, $domainData, $config['testing']);
+        // mlog($cert);
+        if (is_array($cert)) {
+            $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $cert['cert']] );
 
-        if (isset($installedCert)) {
-            $certEndDate = $installedCert->certificate->not_after;
-            $daysLeft = daysToDate($certEndDate);
-            $certEndDateFormated = (new DateTime())->setTimestamp($certEndDate)->format('d/m/y');
-            if ($daysLeft > $config['minDays']){
-                mlog( " {$installedCert->servername} expires {$certEndDateFormated} you have {$daysLeft} days left");
-                mlog( "===========================================================");
-                continue;
-            } else {
-                mlog( "  Expired needs to be updated!!!!!!!!");
-            }
-
-        } else {
-            mlog("  There are no certificates for this domain requesting!");
-        }
-        */
-        $certificate = requestCertificate($email, $domainData, $config['testing']);
-        if (!is_null($certificate)) {
-            $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $certificate] );
-
-            mlog("Installing cert");
+            mlog("Installing certificate");
+            mlog($certData);
             $certInstall = $cpanel->query('SSL', 'install_ssl', [
                 'domain'    => $certData->data->domain,
                 'cert'      => $certData->data->crt,
-                'key'       => $certData->data->key,
+                'key'       => $cert['privatekey'], // $certData->data->key,
                 'cabundle'  => $certData->data->cab,
             ] );
             mlog($certInstall->data->statusmsg);
         } else {
-            mlog("!!!!!Could get certificate!!!!!");
+            mlog("!!!!!Couldn't generate certificate!!!!!");
         }
         mlog( "===========================================================");
     }
