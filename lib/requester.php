@@ -6,7 +6,11 @@ use LEClient\LEClient;
 use LEClient\LEOrder;
 
 function requestCertificate($email, $accountConfig, $testing) {
-    $client = new LEClient($email, $testing, LEClient::LOG_STATUS);
+    $client = new LEClient($email, $testing, LEClient::LOG_STATUS,
+        "_certs/{$accountConfig['domains'][0]}/"
+        // "_accounts/{$accountConfig['domains'][0]}/"
+    );
+
     $order = $client->getOrCreateOrder($accountConfig['domains'][0], $accountConfig['domains']);
     if(!$order->allAuthorizationsValid()) {
         // Get the HTTP challenges from the pending authorizations.
@@ -36,8 +40,12 @@ function requestCertificate($email, $accountConfig, $testing) {
         if(!$order->isFinalized())
             $order->finalizeOrder();
         // Check whether the order has been finalized before we can get the certificate. If finalized, get the certificate.
-        if($order->isFinalized())
-            return $order->getCertificate();
+        if($order->isFinalized() && $order->getCertificate()) {
+            return [
+                'cert' => file_get_contents("_certs/{$accountConfig['domains'][0]}/certificate.crt"),
+                'privatekey' => file_get_contents("_certs/{$accountConfig['domains'][0]}/private.pem")
+            ];
+        }
     }
     return null;
 }
