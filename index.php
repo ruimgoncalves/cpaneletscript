@@ -75,7 +75,6 @@ try {
         } else {
             mlog("  There are no certificates for this domain requesting!");
         }
-        continue;
 
         $cert = requestCertificate($email, $domainData, $config['testing']);
         // mlog($cert);
