@@ -44,15 +44,38 @@ try {
         'password'    => $config['cpanel']['password'],
     ]);
 
-    $serverResp = $cpanel->query('SSL', 'installed_hosts', [] );
-    if (!isset($serverResp)){
+    $installedHosts = $cpanel->query('SSL', 'installed_hosts', [] );
+    if (!isset($installedHosts)){
         mlog( "Cannot connect to Cpanel, check connection and configuration.");
         return;
     }
-    $certsArr = $serverResp->data;
+    $certsArr = $installedHosts->data;
+
+    // mlog($certsArr);
 
     foreach ($config['accounts'] as $email => $domainData) {
-        mlog( "Checking {$email}");
+        mlog( "Checking account {$email} -> {$domainData['domains'][0]}");
+
+        $installedCert = findInArrOfObj($certsArr, $domainData['domains'][0], 'domains', function($a,$b){
+            return in_array($b,$a);
+        });
+
+        if (isset($installedCert)) {
+            $certEndDate = $installedCert->certificate->not_after;
+            $daysLeft = daysToDate($certEndDate);
+            $certEndDateFormated = (new DateTime())->setTimestamp($certEndDate)->format('d/m/y');
+            if ($daysLeft > $config['minDays']){
+                mlog( " {$installedCert->servername} expires {$certEndDateFormated} you have {$daysLeft} days left");
+                mlog( "===========================================================");
+                continue;
+            } else {
+                mlog( "  Expired needs to be updated!!!!!!!!");
+            }
+
+        } else {
+            mlog("  There are no certificates for this domain requesting!");
+        }
+        continue;
 
         $cert = requestCertificate($email, $domainData, $config['testing']);
         // mlog($cert);
