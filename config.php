@@ -9,9 +9,11 @@ return [
         'password' => ''
     ],
     'accounts' => [
-        'info@mydomain.org' => [
+        [
+            'email' => 'info@mydomain.com',
             'publicPath' => '../public_html', // related to the script location, no trailing /
             'domains' => ['mydomain.com', 'www.mydomain.com'],
-        ]
+            'disabled' => false,
+        ],
     ]
 ];

@@ -36,27 +36,31 @@ if (strlen($config['cpanel']['username']) == 0) {
     return;
 }
 
-try {
+$cpanel = new \Cpanel\Cpanel([
+    'host'        => $config['cpanel']['host'], // ip or domain complete with its protocol and port
+    'username'    => $config['cpanel']['username'],
+    'password'    => $config['cpanel']['password'],
+]);
 
-    $cpanel = new \Cpanel\Cpanel([
-        'host'        => $config['cpanel']['host'], // ip or domain complete with its protocol and port
-        'username'    => $config['cpanel']['username'],
-        'password'    => $config['cpanel']['password'],
-    ]);
+$installedHosts = $cpanel->query('SSL', 'installed_hosts', [] );
+if (!isset($installedHosts)){
+    mlog( "Cannot connect to Cpanel, check connection and configuration.");
+    return;
+}
+$certsArr = $installedHosts->data;
 
-    $installedHosts = $cpanel->query('SSL', 'installed_hosts', [] );
-    if (!isset($installedHosts)){
-        mlog( "Cannot connect to Cpanel, check connection and configuration.");
-        return;
-    }
-    $certsArr = $installedHosts->data;
+// mlog($certsArr);
 
-    // mlog($certsArr);
+foreach ($config['accounts'] as $dd) {
 
-    foreach ($config['accounts'] as $email => $domainData) {
-        mlog( "Checking account {$email} -> {$domainData['domains'][0]}");
+    if ($config['disabled'])
+        continue;
 
-        $installedCert = findInArrOfObj($certsArr, $domainData['domains'][0], 'domains', function($a,$b){
+    try {
+
+        mlog( "Checking account {$dd['email']} -> {$dd['domains'][0]}");
+
+        $installedCert = findInArrOfObj($certsArr, $dd['domains'][0], 'domains', function($a,$b){
             return in_array($b,$a);
         });
 
@@ -76,28 +80,35 @@ try {
             mlog("  There are no certificates for this domain requesting!");
         }
 
-        $cert = requestCertificate($email, $domainData, $config['testing']);
+        $cert = requestCertificate($dd, $config['testing']);
         // mlog($cert);
         if (is_array($cert)) {
-            $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $cert['cert']] );
+            if ($config['testing']) {
+                mlog('Got test certificate but not installing');
+            }
+            else {
+                $certData = $cpanel->query('SSL', 'fetch_key_and_cabundle_for_certificate', ['certificate' => $cert['cert']] );
 
-            mlog("Installing certificate");
-            mlog($certData);
-            $certInstall = $cpanel->query('SSL', 'install_ssl', [
-                'domain'    => $certData->data->domain,
-                'cert'      => $certData->data->crt,
-                'key'       => $cert['privatekey'], // $certData->data->key,
-                'cabundle'  => $certData->data->cab,
-            ] );
-            mlog($certInstall->data->statusmsg);
+                mlog("Installing certificate");
+                // mlog($certData);
+                $certInstall = $cpanel->query('SSL', 'install_ssl', [
+                    'domain'    => $certData->data->domain,
+                    'cert'      => $certData->data->crt,
+                    'key'       => $cert['privatekey'], // $certData->data->key,
+                    'cabundle'  => $certData->data->cab,
+                ] );
+                mlog($certInstall->data->statusmsg);
+            }
         } else {
             mlog("!!!!!Couldn't generate certificate!!!!!");
         }
-        mlog( "===========================================================");
+
+    } catch (\Exception $e) {
+        mlog( "--== Exception ==--");
+        mlog($e->getMessage());
+        mlog($e->getTraceAsString());
     }
 
-} catch (\Exception $e) {
-    mlog( "--== Exception ==--");
-    mlog($e->getMessage());
-    mlog($e->getTraceAsString());
+    mlog( "===========================================================");
+
 }
