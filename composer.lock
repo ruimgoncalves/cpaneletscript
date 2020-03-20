@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "yourivw/leclient",
-            "version": "1.1.10",
+            "version": "1.1.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yourivw/LEClient.git",
-                "reference": "a2de17bc6059ebfb91c16ecb29a3f66df6b43907"
+                "reference": "7abf7eb97bb2add7d90e89deac1f5edba7e84649"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yourivw/LEClient/zipball/a2de17bc6059ebfb91c16ecb29a3f66df6b43907",
-                "reference": "a2de17bc6059ebfb91c16ecb29a3f66df6b43907",
+                "url": "https://api.github.com/repos/yourivw/LEClient/zipball/7abf7eb97bb2add7d90e89deac1f5edba7e84649",
+                "reference": "7abf7eb97bb2add7d90e89deac1f5edba7e84649",
                 "shasum": ""
             },
             "require": {
@@ -34,7 +34,7 @@
                 "MIT"
             ],
             "description": "PHP LetsEncrypt client library for ACME v2",
-            "time": "2019-09-29T12:30:41+00:00"
+            "time": "2020-01-13T09:51:56+00:00"
         }
     ],
     "packages-dev": [],
