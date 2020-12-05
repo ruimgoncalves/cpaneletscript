@@ -17,9 +17,9 @@ date_default_timezone_set("UTC");
 
 if (php_sapi_name() == 'cli'){
     $opts = getopt('',['config:']);
-    $configName = aDef($opts, 'config');
+    $configName = getVal($opts['config']);
 } else {
-    $configName = aDef($_GET, 'config');
+    $configName = getVal($_GET['config']);
 }
 
 if (!isset($configName)){
@@ -36,11 +36,7 @@ if (strlen($config['cpanel']['username']) == 0) {
     return;
 }
 
-$cpanel = new \Cpanel\Cpanel([
-    'host'        => $config['cpanel']['host'], // ip or domain complete with its protocol and port
-    'username'    => $config['cpanel']['username'],
-    'password'    => $config['cpanel']['password'],
-]);
+$cpanel = new \Cpanel\Cpanel($config['cpanel']);
 
 $installedHosts = $cpanel->query('SSL', 'installed_hosts', [] );
 if (!isset($installedHosts)){

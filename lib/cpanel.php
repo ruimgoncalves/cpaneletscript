@@ -10,22 +10,30 @@ class CPanel
   private $host;
   private $username;
   private $password;
+  private $token;
   private $response;
 
   function __construct($data)
   {
-    $this->host = $data['host'];
-    $this->username = $data['username'];
-    $this->password = $data['password'];
+    $this->host = getVal($data['host']);
+    $this->username = getVal($data['username']);
+    $this->password = getVal($data['password']);
+    $this->token = getVal($data['token']);
   }
 
   function query($module, $func, $funcparams = []){
     // Create new curl handle
-		$ch = curl_init();
-
-    $headers = [
-      "Authorization: Basic " . base64_encode($this->username . ":" . $this->password)
-    ];
+    $ch = curl_init();
+    
+    if (!empty($this->token)) {
+      $headers = [
+        "Authorization: cpanel {$this->username}:{$this->token}"
+      ];
+    } else {
+      $headers = [
+        "Authorization: Basic " . base64_encode($this->username . ":" . $this->password)
+      ];
+    }
 
     $params = array_merge([
       'cpanel_jsonapi_apiversion' => 3,
