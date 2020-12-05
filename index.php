@@ -49,7 +49,7 @@ $certsArr = $installedHosts->data;
 
 foreach ($config['accounts'] as $dd) {
 
-    if ($config['disabled'])
+    if (getVal($config['disabled'], false))
         continue;
 
     try {
