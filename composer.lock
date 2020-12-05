@@ -1,23 +1,23 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
     "content-hash": "94a6e950ee55b88fa55d9c222db4db5d",
     "packages": [
         {
             "name": "yourivw/leclient",
-            "version": "1.1.11",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yourivw/LEClient.git",
-                "reference": "7abf7eb97bb2add7d90e89deac1f5edba7e84649"
+                "reference": "0adfcdb504a83f0df9ec6ef1743289e57bd70053"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yourivw/LEClient/zipball/7abf7eb97bb2add7d90e89deac1f5edba7e84649",
-                "reference": "7abf7eb97bb2add7d90e89deac1f5edba7e84649",
+                "url": "https://api.github.com/repos/yourivw/LEClient/zipball/0adfcdb504a83f0df9ec6ef1743289e57bd70053",
+                "reference": "0adfcdb504a83f0df9ec6ef1743289e57bd70053",
                 "shasum": ""
             },
             "require": {
@@ -34,7 +34,11 @@
                 "MIT"
             ],
             "description": "PHP LetsEncrypt client library for ACME v2",
-            "time": "2020-01-13T09:51:56+00:00"
+            "support": {
+                "issues": "https://github.com/yourivw/LEClient/issues",
+                "source": "https://github.com/yourivw/LEClient/tree/master"
+            },
+            "time": "2020-04-15T09:54:05+00:00"
         }
     ],
     "packages-dev": [],
@@ -44,5 +48,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.0.0"
 }
